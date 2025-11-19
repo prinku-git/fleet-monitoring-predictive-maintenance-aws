@@ -9,9 +9,9 @@ FEATURES :
 - SNS alerts for critical temperature
 
 FILES IN THIS REPO :
-- Detailed documentation with screenshots (PDF)
-- Lambda function code
 - Architecture diagram
+- Lambda function code
+-  Detailed documentation with screenshots
 - Power point presentation with live demo video
 
 CONTACT : 
