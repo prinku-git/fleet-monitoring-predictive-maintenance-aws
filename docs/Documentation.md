@@ -1,4 +1,4 @@
-# ⚙️ IOT FLEET MONITORING AND PREDICTIVE MAINTENANCE DOCUMENTATION
+# ⚙️ IOT FLEET MONITORING AND PREDICTIVE MAINTENANCE WITH SAGEMAKER - DOCUMENTATION
 
 ## 1. Project Overview and Architecture
 
@@ -40,7 +40,7 @@ The use of a Customer Managed Key (CMK) is a security best practice for enterpri
 2.  Click **"Customer managed keys"** in the left navigation pane.
 3.  Click the **"Create key"** button.
 4.  Choose **Symmetric** key type and click **Next**.
-5.  Set the alias as `fleet-kms` and add a description.
+5.  Set the alias name and add a description.
 6.  Define Key Administrators and Key Users (IAM roles/users that can use the key for encryption/decryption). Review and finalize.
 
 <img width="940" height="491" alt="image" src="https://github.com/user-attachments/assets/ebff37c7-78de-4765-959f-18ac18fcd0b4" />
@@ -56,12 +56,12 @@ The Lambda function requires permissions to interact with S3, DynamoDB, SNS, Sag
 3.  Select **"AWS service"** as the trusted entity and **"Lambda"** as the use case. Click **Next**.
 4.  Create a custom policy named `fleet-lambda-policy` with permissions for:
     * **CloudWatch Logs:** `logs:CreateLogGroup`, `logs:CreateLogStream`, `logs:PutLogEvents`.
-    * **DynamoDB:** `dynamodb:PutItem`, `dynamodb:BatchWriteItem` (limited to `arn:aws:dynamodb:us-east-1:[ACCOUNT_ID]:table/fleet-table`).
+    * **DynamoDB:** `dynamodb:PutItem`, `dynamodb:BatchWriteItem` (limited to `arn:aws:dynamodb:us-east-1:[ACCOUNT_ID]:table/DYANAMODB-NAME`).
     * **S3:** `s3:GetObject` (to read the uploaded file).
     * **SNS:** `sns:Publish` (limited to the fleet SNS Topic ARN).
-    * **SageMaker:** `sagemaker:InvokeEndpoint` (limited to the `fleet-alert-ai` endpoint ARN).
-    * **KMS:** `kms:Decrypt`, `kms:GenerateDataKey` (limited to the `fleet-kms` ARN).
-5.  Attach this policy, name the role `fleet-lambda-role`, and save. 
+    * **SageMaker:** `sagemaker:InvokeEndpoint` (limited to the `ENDPOINT-NAME` endpoint ARN).
+    * **KMS:** `kms:Decrypt`, `kms:GenerateDataKey` (limited to the `KMS-NAME` ARN).
+5.  Attach this policy, name the role `LAMBDA-NAME`, and save. 
 
 <img width="836" height="526" alt="image" src="https://github.com/user-attachments/assets/7c8a2e50-63c0-4786-aa20-fbe99121e859" />
 <img width="940" height="512" alt="image" src="https://github.com/user-attachments/assets/daee082b-b4f1-4957-8e84-2856e0ccb246" />
@@ -76,10 +76,10 @@ This bucket receives the raw telemetry files and is secured using the CMK.
 **STEP 3.1.1: CREATE THE S3 BUCKET**
 1.  Navigate to **S3** service.
 2.  Click **"Create bucket"**.
-3.  Name the bucket `fleet-iot-data-[YOUR_UNIQUE_ID]`.
+3.  Name the bucket .
 4.  Under **"Block Public Access settings"**, ensure **"Block all public access"** is checked (security best practice).
 5.  Under **"Default encryption"**, select **"AWS Key Management Service (AWS KMS)"**.
-6.  Choose **"Customer managed key (CMK)"** and select the `fleet-kms` key alias.
+6.  Choose **"Customer managed key (CMK)"** and select the `KMS-NAME` key alias.
 7.  Click **"Create bucket"**.
 
 <img width="849" height="464" alt="image" src="https://github.com/user-attachments/assets/121791a0-34ea-4e28-93cc-d758556daf82" />
@@ -92,12 +92,12 @@ This table stores the processed, structured data for fast lookup.
 **STEP 3.2.1: CREATE THE DYNAMODB TABLE**
 1.  Navigate to **DynamoDB** service.
 2.  Click **"Create table"**.
-3.  Name the table `fleet-table`.
+3.  Name the table .
 4.  Define the **Primary Key**:
     * **Partition Key:** `device_id` (String)
     * **Sort Key:** `timestamp` (String)
     * *This key structure is crucial for efficient time-series data retrieval per vehicle.*
-5.  Under **"Encryption at rest"**, choose **"Customer managed key (CMK)"** and select your `fleet-kms` key.
+5.  Under **"Encryption at rest"**, choose **"Customer managed key (CMK)"** and select your `KMS-NAME`` key.
 6.  Click **"Create table"**.
 
 <img width="940" height="513" alt="image" src="https://github.com/user-attachments/assets/686a45bb-f2f1-47d4-80af-8e0322dae046" />
@@ -115,25 +115,19 @@ This topic serves as the publication point for critical alerts.
 1.  Navigate to **SNS** service.
 2.  Click **"Topics"** and then **"Create topic"**.
 3.  Choose **"Standard"** type.
-4.  Name the topic `fleet-sns`. Click **"Create topic"**.
+4.  Name the topic. Click **"Create topic"**.
  
 <img width="940" height="488" alt="image" src="https://github.com/user-attachments/assets/4bd7bc9f-194e-4696-a62b-77b0cbb1de07" />
-<img width="940" height="490" alt="image" src="https://github.com/user-attachments/assets/a56186a2-9bce-48fa-a032-52575023b0de" />
 
 
 
 **STEP 4.1.2: CREATE AN EMAIL SUBSCRIPTION**
-1.  On the `fleet-sns` topic details page, click **"Create subscription"**.
+1.  On the topic details page, click **"Create subscription"**.
 2.  Set **Protocol** to **Email**.
-3.  Set **Endpoint** to the desired admin/driver email address (e.g., `priyankaraj0919@gmail.com`).
+3.  Set **Endpoint** to the desired admin/driver email address (e.g., `ABCD@gmail.com`).
 4.  Click **"Create subscription"**.
 5.  Check the endpoint email inbox and click the **"Confirm subscription"** link. The status in the SNS Console will change to **"Confirmed"**.
 <img width="940" height="490" alt="image" src="https://github.com/user-attachments/assets/274e5539-2eee-4a7b-90ef-a66f8e5a6c77" />
-<img width="940" height="490" alt="image" src="https://github.com/user-attachments/assets/df27dbb0-1a14-43c6-a202-200c2ca1bf17" />
-
-
-
-
 
 ---
 
@@ -144,10 +138,10 @@ A model trained for binary classification (maintenance required/not required) mu
 
 **STEP 5.1.1: DEPLOY THE MODEL ENDPOINT**
 * **Action:** Ensure your trained SageMaker model is deployed as a real-time endpoint.
-* **Configuration:** The endpoint name must be set to `fleet-alert-ai` so the Lambda function can correctly invoke it.
+* **Configuration:** The endpoint name must be set to `ENDPOINT-NAME` so the Lambda function can correctly invoke it.
 * **Note:** The Lambda function will send vehicle sensor data to this endpoint and receive a prediction label (e.g., **POSITIVE** or **NEGATIVE**).
 
-<img width="940" height="490" alt="image" src="https://github.com/user-attachments/assets/d0e98d63-7610-4d27-80f7-035e2444dcba" />
+<img width="1366" height="768" alt="23" src="https://github.com/user-attachments/assets/0cfebf0f-d9ff-4c63-bf66-58bc72b259d8" />
 
 
 ### 5.2. AWS LAMBDA FUNCTION CREATION
@@ -156,25 +150,23 @@ A model trained for binary classification (maintenance required/not required) mu
 1.  Navigate to **Lambda** service.
 2.  Click **"Create function"**.
 3.  Select **"Author from scratch"**.
-4.  Set **Function name** to `fleet-lambda`.
+4.  Set **Function name** .
 5.  Set **Runtime** to a Python version (e.g., **Python 3.10**).
-6.  Under **"Change default execution role"**, select **"Use an existing role"** and choose `fleet-lambda-role`.
+6.  Under **"Change default execution role"**, select **"Use an existing role"** and choose `LAMBDA-NAME`.
 7.  Click **"Create function"**.
 
-<img width="940" height="490" alt="image" src="https://github.com/user-attachments/assets/11c2aef9-7e52-4c57-b43c-e0f6b8bc6f42" />
+<img width="1366" height="711" alt="12" src="https://github.com/user-attachments/assets/e73bcd5f-274e-47a3-843d-863a954d1b6d" />
 
 
 **STEP 5.2.2: ADD S3 TRIGGER**
 1.  In the Lambda function designer, click **"Add trigger"**.
 2.  Select **"S3"** from the list of sources.
-3.  Choose the S3 bucket `fleet-iot-data-[YOUR_UNIQUE_ID]`.
+3.  Choose the S3 bucket `BUCKET-NAME`.
 4.  Set **Event type** to **"All object create events"**.
 5.  Acknowledge the recursive invocation warning and click **"Add"**.
 
-<img width="940" height="490" alt="image" src="https://github.com/user-attachments/assets/612ab6ab-5c55-41d1-b6f9-0c3731ee30d4" />
-<img width="940" height="490" alt="image" src="https://github.com/user-attachments/assets/2ae686f0-3248-4ab5-bf05-a0c0f956de71" />
-
-
+<img width="1366" height="709" alt="14" src="https://github.com/user-attachments/assets/bbfdb01b-8338-474c-a113-76f8da0e9f1d" />
+<img width="1366" height="709" alt="15" src="https://github.com/user-attachments/assets/09a5bf2a-14e2-463b-9dcb-9639aeed3537" />
 
 ---
 
@@ -185,104 +177,110 @@ A model trained for binary classification (maintenance required/not required) mu
 **STEP 6.1.1: PASTE THE PYTHON CODE**
 In the Lambda Console, paste your Python logic into the `lambda_function.py` editor.
 
-<img width="940" height="490" alt="image" src="https://github.com/user-attachments/assets/f8218daf-33b5-4aab-bdaa-78ba8fcb9e24" />
+For FULL CODE : https://github.com/prinku-git/fleet-monitoring-predictive-maintenance-aws/blob/main/lambda_function.py
+
+<img width="1366" height="709" alt="16" src="https://github.com/user-attachments/assets/bc225535-5176-4618-81c8-0febc9eb5b4b" />
+
 
 
 **KEY CODE LOGIC:**
 
 | Code Section | Purpose | Detail |
 | :--- | :--- | :--- |
-| `Boto3 Clients` | Initialization | Sets up clients for **S3, DynamoDB, SNS, and SageMaker Runtime** using the `fleet-lambda-role`'s permissions. |
+| `Boto3 Clients` | Initialization | Sets up clients for **S3, DynamoDB, SNS, and SageMaker Runtime** using the `LAMBDA-NAME`'s permissions. |
 | `convert_floats_to_decimal` | Data Type Handling | A crucial utility function that recursively converts all Python float values in the JSON payload into **DynamoDB's native Decimal** type before writing. |
 | `S3 Read` | Data Ingestion | Reads the raw log file triggered by the event from the S3 bucket. |
 | `Data Parsing` | Transformation | Extracts key fields (`device_id`, `timestamp`, `engine_temp_c`) from the raw log line and converts them to a structured dictionary/JSON. |
-| `SageMaker Invocation` | Prediction | Calls the `fleet-alert-ai` endpoint with the structured data and retrieves the `prediction_label` (e.g., **POSITIVE**). |
-| `DynamoDB Write` | Storage | Writes the complete, structured payload (including the prediction) to the `fleet-table` using the `PutItem` operation. |
-| `SNS Alert Condition` | Alerting | An `if` condition checks the `engine_temp_c` value. If it exceeds a predefined threshold (e.g., **100.0°C**), it calls `sns_client.publish()` to the `fleet-sns` topic. |
+| `SageMaker Invocation` | Prediction | Calls the `ENDPOINT-NAME` endpoint with the structured data and retrieves the `prediction_label` (e.g., **POSITIVE**). |
+| `DynamoDB Write` | Storage | Writes the complete, structured payload (including the prediction) to the `DYNAMODB-NAME` using the `PutItem` operation. |
+| `SNS Alert Condition` | Alerting | An `if` condition checks the `engine_temp_c` value. If it exceeds a predefined threshold (e.g., **100.0°C**), it calls `sns_client.publish()` to the `SNS-TOPIC-NAME` topic. |
+
+---
+### STEP 7.1.2: TRIGGER THE WORKFLOW
+Upload the **`test-data.txt`** file to the **`S3-BUCKET-NAME`** S3 bucket.  
+The S3 upload event immediately triggers the **`LAMBDA-NAME`** function.
+
+<img width="1366" height="711" alt="25" src="https://github.com/user-attachments/assets/8c68f5d2-238d-4ab9-9614-608067528dfa" />
 
 ---
 
-## 7. TESTING AND VERIFICATION
+### STEP 7.1.3: VERIFICATION OF SNS ALERT
+Check the email inbox subscribed to the **`SNS-TOPIC-NAME`** topic.
 
-**STEP 7.1.1: Prepare Test Data**
-Create a simple text file (`test-data.txt`) simulating vehicle logs. Include at least one record where the temperature is **above 100°C** to trigger the SNS alert.
+**Expected Outcome:**  
+An alert email should be received for **VHC001 (124.0°C)**, confirming the critical-condition alert mechanism is functional.
 
-```text
-device_id:VHC001, timestamp:2025-11-15T10:00:00Z, engine_temp_c:124.0
-device_id:VHC002, timestamp:2025-11-15T10:01:00Z, engine_temp_c:95.5
+<img width="1366" height="702" alt="26" src="https://github.com/user-attachments/assets/bbcd8aec-2205-4645-b4fa-fc14b649309c" />
 
-![Uploading image.png…]()
 
-STEP 7.1.2: TRIGGER THE WORKFLOW
+---
 
-Action: Upload the test-data.txt file to the fleet-iot-data S3 bucket.
+### STEP 7.1.4: VERIFICATION OF DYNAMODB STORAGE
+Navigate to the **`DYNAMODB-NAME`** in DynamoDB.
 
-Process: The S3 upload event immediately triggers the fleet-lambda function.
+**Expected Outcome:**  
+Two new items should be visible:
 
-[Insert S3 Upload Confirmation Screenshot Here]
+- **VHC001**  
+- **VHC002**
 
-STEP 7.1.3: VERIFICATION OF SNS ALERT
+Both records should include the SageMaker prediction label (e.g., **POSITIVE**).
 
-Expected Outcome: An alert email should be received for VHC001 (124.0°C).
+<img width="1366" height="709" alt="27" src="https://github.com/user-attachments/assets/6cb8a4b8-e73c-4123-875e-99d9b6d4e059" />
 
-Purpose: Confirms that the SNS critical alert mechanism is working correctly.
 
-[Insert Received SNS Alert Email Screenshot Here]
+---
 
-STEP 7.1.4: VERIFICATION OF DYNAMODB STORAGE
+### STEP 7.1.5: VERIFICATION OF LOGS
+Navigate to the CloudWatch Log Group for the **`LAMBDA-FUNCTION`** function.
 
-Expected Outcome: Two new items should be visible in the fleet-table:
+**Expected Outcome:**  
+Logs should show:
 
-VHC001
+- Successful execution  
+- DynamoDB write  
+- SNS publish  
+- SageMaker prediction result  
 
-VHC002
+<img width="1366" height="715" alt="28" src="https://github.com/user-attachments/assets/de9b89a2-0005-4f29-a7bc-326de17852e3" />
 
-Validation: Each entry must contain the SageMaker prediction label (e.g., POSITIVE).
 
-[Insert DynamoDB Table Content Screenshot Here]
+---
 
-STEP 7.1.5: VERIFICATION OF LOGS
+## 8. Project Summary and Conclusion
+This project successfully establishes a **robust, scalable, and secure IoT Fleet Monitoring and Predictive Maintenance solution** entirely built on **AWS Serverless Architecture**.
 
-Expected Outcome: The CloudWatch Log Group for fleet-lambda should show:
+---
 
-Successful DynamoDB write
+### System Achievement Highlights
 
-Successful SNS publish action
+#### **End-to-End Automation**
+A fully automated workflow handling ingestion → processing → prediction → alerting.
 
-Overall Lambda execution logs
+#### **Real-Time Capability**
+Event-driven pipeline using S3 + Lambda ensures real-time detection and alerts.
 
-[Insert CloudWatch Log Events Screenshot Here]
+#### **Predictive Intelligence**
+SageMaker model provides proactive maintenance intelligence.
 
-8. Project Summary and Conclusion
+#### **Best-Practice Security**
+IAM least privilege + SSE-KMS encryption with CMK ensures enterprise security.
 
-This project establishes a complete IoT Fleet Monitoring and Predictive Maintenance solution using AWS Serverless Services.
+#### **Scalability & Cost Efficiency**
+Serverless (Lambda, DynamoDB, SNS, S3) ensures auto-scaling and low cost.
 
-System Achievement Highlights
-1. End-to-End Automation
+---
 
-Automated data ingestion
+### Conclusion
+This project demonstrates strong cloud architecture, security design, serverless expertise, and ML integration—delivering a scalable, cost-efficient solution suitable for enterprise deployment.
 
-Real-time processing
 
-ML prediction
 
-Instant alerting
 
-2. Predictive Intelligence
 
-SageMaker predicts maintenance needs, reducing downtime and improving safety.
 
-3. Best-Practice Security
 
-IAM with Least Privilege
 
-AWS KMS (SSE-KMS) encryption for S3 and DynamoDB
 
-4. Scalability and Cost Efficiency
 
-Serverless architecture auto-scales and reduces operational overhead.
-
-Conclusion
-
-This project demonstrates strong knowledge in cloud architecture, security, automation, and machine learning integration on AWS.
 
