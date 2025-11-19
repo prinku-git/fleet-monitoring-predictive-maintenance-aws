@@ -11,8 +11,9 @@ FEATURES :
 FILES IN THIS REPO :
 - Architecture diagram
 - Lambda function code
--  Detailed documentation with screenshots
-- Power point presentation with live demo video
+- Power point presentation
+- Detailed documentation with screenshots
+
 
 CONTACT : 
 priyankaraj0919@gmail.com
